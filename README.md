@@ -3,7 +3,9 @@ https://www.ncbi.nlm.nih.gov/geo/info/MINiML.html is a great resource to underst
 TODO:
 - Handle additional nesting in channel
 - Unit tests
-- Dump data not found in columns
+- Linting
+- Upload to S3
+- Make a database connection file instead of keeping it in the code
 
 72 MB / 1k records
 1k records took 900 seconds (15 minutes) to process

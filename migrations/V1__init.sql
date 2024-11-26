@@ -38,3 +38,12 @@ CREATE TABLE sample (
     last_update_date DATE NOT NULL,
     additional_metadata JSONB
 );
+
+CREATE TABLE download_attempt (
+    id SERIAL PRIMARY KEY,
+    gse_id TEXT NOT NULL,
+    url TEXT NOT NULL,
+    attempt_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    success BOOLEAN NOT NULL DEFAULT FALSE,
+    error_message TEXT
+);
