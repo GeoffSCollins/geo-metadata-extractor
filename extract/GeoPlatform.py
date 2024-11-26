@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class GeoPlatform:
     platform_dict: dict
 
@@ -6,7 +9,7 @@ class GeoPlatform:
     technology: str
     distribution: str
     organism: str
-    description: str
+    description: Optional[str]
     submission_date: str
     release_date: str
     last_updated_date: str
@@ -21,7 +24,7 @@ class GeoPlatform:
         self.technology = platform_dict['Technology']
         self.distribution = platform_dict['Distribution']
         self.organism = platform_dict['Organism']
-        self.description = platform_dict['Description']
+        self.description = platform_dict.get('Description')
         self.submission_date = platform_dict['Status']['Submission-Date']
         self.release_date = platform_dict['Status']['Release-Date']
         self.last_updated_date = platform_dict['Status']['Last-Update-Date']

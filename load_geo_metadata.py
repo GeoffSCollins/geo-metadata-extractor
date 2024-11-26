@@ -7,11 +7,12 @@ from extract.GeoSample import GeoSample
 from extract.GeoSeries import GeoSeries
 
 
-def load_series(conn, series: List[GeoSeries]) -> int:
+def load_series(conn, miniml_file_id: int, series: List[GeoSeries]) -> int:
     """
     Loads data into the series table
 
     :param conn: The database connection
+    :param miniml_file_id: The miniml file record identifier
     :param series: A list of series objects
     :return: The ID of the series record inserted in the database
     """
@@ -22,6 +23,7 @@ def load_series(conn, series: List[GeoSeries]) -> int:
             cursor.execute(
                 """
                 INSERT INTO series (
+                    miniml_file_id,
                     title,
                     accession,
                     pubmed_id,
@@ -32,10 +34,11 @@ def load_series(conn, series: List[GeoSeries]) -> int:
                     last_update_date,
                     additional_metadata
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
                 """,
                 (
+                    miniml_file_id,
                     ser.title,
                     ser.accession,
                     ser.pubmed_id,
@@ -112,7 +115,6 @@ def load_samples(conn, samples: List[GeoSample], series_id) -> None:
     data = [
         (
             series_id,
-
             sample.title,
             sample.accession,
             sample.type,
@@ -140,6 +142,7 @@ def load_samples(conn, samples: List[GeoSample], series_id) -> None:
                 additional_metadata
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
             """,
             data
         )

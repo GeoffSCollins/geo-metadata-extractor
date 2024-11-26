@@ -3,23 +3,22 @@ import shutil
 
 import requests
 import tarfile
-import time
 import threading
 import psycopg2
 
 from typing import Optional
 
-ERROR_LOG = "error_log.txt"
-
 class DownloadAttempt:
     gse_id: str
     url: str
+    local_path: str
     success: bool
     error_message: Optional[str]
 
-    def __init__(self, gse_id: str, url: str, success: bool, error_message: Optional[str]):
+    def __init__(self, gse_id: str, url: str, local_path: str, success: bool, error_message: Optional[str]):
         self.gse_id = gse_id
         self.url = url
+        self.local_path = local_path
         self.success = success
         self.error_message = error_message
 
@@ -52,7 +51,7 @@ class GeoMetadataDownloader:
 
     def download_all(self):
         for i in range(self._start_gse_id, self._start_gse_id + self._end_gse_id, self._batch_size):
-            batch_end = min(i + batch_size, end)
+            batch_end = min(i + self._batch_size, self._end_gse_id)
             print(f"Downloading MINiML files {i} to {batch_end - 1}")
 
             threads = []
@@ -67,12 +66,21 @@ class GeoMetadataDownloader:
 
 
     def get_metadata(self, gse_id: str) -> bool:
-        # create a directory named gse_id
-        temp_directory = os.path.join(self._output_directory, gse_id)
-        os.makedirs(temp_directory, exist_ok=True)
+        """
+        Downloads and unzips the metadata from GEO
 
+        :param gse_id: The GEO GSE identifier
+        :return: True if the metadata was downloaded and unzipped successfully
+        """
+        temp_directory = os.path.join(self._output_directory, gse_id)
         gzipped_miniml_file_location = f"{temp_directory}/{gse_id}_family.xml.tgz"
         miniml_file_location = f"{self._output_directory}/{gse_id}_family.xml"
+
+        # If the file already exists, then quit early
+        if os.path.exists(miniml_file_location):
+            return True
+
+        os.makedirs(temp_directory, exist_ok=True)
 
         download_attempt = self.download_miniml_file(
             gse_id,
@@ -80,6 +88,7 @@ class GeoMetadataDownloader:
         )
 
         if not download_attempt.success:
+            shutil.rmtree(temp_directory)
             self.load_download_attempt(download_attempt)
 
             return False
@@ -100,6 +109,8 @@ class GeoMetadataDownloader:
 
         shutil.move(f"{temp_directory}/{gse_id}_family.xml", miniml_file_location)
         shutil.rmtree(temp_directory)
+
+        download_attempt.local_path = miniml_file_location
 
         self.load_download_attempt(download_attempt)
 
@@ -122,6 +133,7 @@ class GeoMetadataDownloader:
             return DownloadAttempt(
                 gse_id=gse_id,
                 url=url,
+                local_path='',
                 success=True,
                 error_message=None
             )
@@ -130,46 +142,32 @@ class GeoMetadataDownloader:
             return DownloadAttempt(
                 gse_id=gse_id,
                 url=url,
+                local_path='',
                 success=False,
                 error_message=str(e)
             )
 
 
-    def load_download_attempt(self, download_attempt: DownloadAttempt):
+    def load_download_attempt(self, download_attempt: DownloadAttempt) -> None:
         with self.conn.cursor() as cursor:
             cursor.execute(
                 """
                 INSERT INTO download_attempt (
                     gse_id,
                     url,
+                    local_path,
                     success,
                     error_message
                 )
-                VALUES (%s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s)
                 """,
                 (
                     download_attempt.gse_id,
                     download_attempt.url,
+                    download_attempt.local_path,
                     download_attempt.success,
                     download_attempt.error_message
                 )
             )
 
         self.conn.commit()
-
-if __name__ == '__main__':
-    start = 1
-    end = 10
-    batch_size = 150
-
-    start_time = time.time()
-
-    GeoMetadataDownloader(
-        output_directory="xml_files",
-        start_gse_id=start,
-        end_gse_id=end,
-        batch_size=batch_size
-    ).download_all()
-
-    end_time = time.time()
-    print(f"Time taken to download {end - start} MINiML files: {end_time - start_time} seconds")

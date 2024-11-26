@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 
 from extract.GeoSeries import GeoSeries
 from extract.GeoPlatform import GeoPlatform
@@ -7,24 +7,32 @@ from extract.GeoSample import GeoSample
 
 
 class GeoMetadataExtractor:
-    gse_id: int
     miniml_file_location: str
     series: List[GeoSeries]
     platforms: List[GeoPlatform]
     samples: List[GeoSample]
 
+    extraction_successful: bool
+    extraction_error: Optional[str] = None
+
     _print_to_console: bool
 
-    def __init__(self, gse_id: int, miniml_file_location: str, print_to_console: bool = False):
-        self.gse_id = gse_id
+    def __init__(self, miniml_file_location: str, print_to_console: bool = False):
         self.miniml_file_location = miniml_file_location
         self._print_to_console = print_to_console
-        self._extract_geo_metadata()
+        self.extraction_successful = self._extract_geo_metadata()
 
 
-    def _extract_geo_metadata(self) -> None:
-        with open(self.miniml_file_location, 'r', encoding='utf-8') as file:
-            xml_data = file.read()
+    def _extract_geo_metadata(self) -> bool:
+        try:
+            with open(self.miniml_file_location, 'r', encoding='utf-8') as file:
+                xml_data = file.read()
+        except FileNotFoundError as e:
+            self.extraction_error = str(e)
+            return False
+        except UnicodeDecodeError as e:
+            self.extraction_error = str(e)
+            return False
 
         soup = BeautifulSoup(xml_data, 'xml')
 
@@ -54,6 +62,7 @@ class GeoMetadataExtractor:
         )
 
         self.samples = [GeoSample(x) for x in samples_dict]
+        return True
 
     def _warn_if_additionally_nested_data(
         self,
