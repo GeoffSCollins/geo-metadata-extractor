@@ -2,7 +2,9 @@ import json
 
 from typing import List
 
-from extract_geo_metadata import GeoSeries, GeoPlatform, GeoSample
+from extract.GeoPlatform import GeoPlatform
+from extract.GeoSample import GeoSample
+from extract.GeoSeries import GeoSeries
 
 
 def load_series(conn, series: List[GeoSeries]) -> int:

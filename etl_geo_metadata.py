@@ -1,6 +1,6 @@
 import psycopg2
 
-from extract_geo_metadata import GeoMetadataExtractor
+from extract.GeoMetadataExtractor import GeoMetadataExtractor
 from load_geo_metadata import load_series, load_platforms, load_samples
 
 if __name__ == '__main__':
