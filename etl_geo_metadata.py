@@ -1,17 +1,22 @@
 import psycopg2
 
-from extract_geo_metadata import extract_geo_metadata
-from load_geo_metadata import load_series
+from extract_geo_metadata import GeoMetadataExtractor
+from load_geo_metadata import load_series, load_platforms, load_samples
 
 if __name__ == '__main__':
     conn = psycopg2.connect("postgresql://postgres:password@localhost:5432/postgres")
 
     for i in range(1, 10):
-        input_file = f"xml_files/GSE{i}_family.xml"
+        miniml_file_location = f"xml_files/GSE{i}_family.xml"
 
-        geo_metadata = extract_geo_metadata(input_file)
-        series = geo_metadata['series']
+        geo_metadata_extractor = GeoMetadataExtractor(
+            gse_id=i,
+            miniml_file_location=miniml_file_location,
+            print_to_console=False
+        )
 
-        load_series(conn, series)
+        series_id = load_series(conn, geo_metadata_extractor.series)
+        load_platforms(conn, geo_metadata_extractor.platforms, series_id)
+        load_samples(conn, geo_metadata_extractor.samples, series_id)
 
     conn.commit()
