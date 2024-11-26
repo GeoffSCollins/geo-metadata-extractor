@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from typing import List
 
-from utils import (
+from utils.utils import (
     _warn_if_additionally_nested_data,
     _remove_data_tables,
     _convert_soup_to_dict,
@@ -11,9 +11,17 @@ from utils import (
 
 def extract_samples_data(
     miniml_file_location: str,
-    log_file_location: str = 'extract_samples.log',
+    log_file_location: str = 'logs/extract_samples.log',
     print_to_console: bool = False
 ) -> List[dict]:
+    """
+    Extracts a list of dictionary objects for each of the samples within the MINiML file
+
+    :param miniml_file_location: The path to the MINiML file
+    :param log_file_location: The path to the log file for the sample extraction step
+    :param print_to_console: If true, also outputs the warnings to stdout using the print statement
+    :return: A list of dictionaries
+    """
     with open(miniml_file_location, 'r', encoding='utf-8') as file:
         xml_data = file.read()
 

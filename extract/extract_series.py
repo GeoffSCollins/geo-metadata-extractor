@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from utils import (
+from utils.utils import (
     _warn_if_additionally_nested_data,
     _convert_soup_to_dict,
     _reformat_status
@@ -9,15 +9,22 @@ from utils import (
 
 def extract_series_data(
     miniml_file_location: str,
-    log_file_location: str = 'series.log',
+    log_file_location: str = 'logs/series.log',
     print_to_console: bool = False
 ) -> dict:
+    """
+    Extracts a dictionary object for the series section of the MINiML file
+
+    :param miniml_file_location: The path to the MINiML file
+    :param log_file_location: The path to the log file for the series extraction step
+    :param print_to_console: If true, also outputs the warnings to stdout using the print statement
+    :return: A dictionary
+    """
     with open(miniml_file_location, 'r', encoding='utf-8') as file:
         xml_data = file.read()
 
     soup = BeautifulSoup(xml_data, 'xml')
 
-    # Extract the Platform data
     series = soup.find_all('Series')[0]
 
     _warn_if_additionally_nested_data(
